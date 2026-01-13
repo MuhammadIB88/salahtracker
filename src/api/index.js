@@ -1,18 +1,32 @@
 import axios from 'axios';
 
-// We add /api here so all calls automatically use the correct prefix
+// 1. Create the instance with the base URL
 const API = axios.create({ 
   baseURL: 'https://salahtracker-backend.onrender.com/api' 
 });
 
-// Auth Routes
+// 2. Add an interceptor to automatically add the token to every request
+API.interceptors.request.use((config) => {
+  // Get the token from localStorage (saved during login)
+  const token = localStorage.getItem('token'); 
+  
+  if (token) {
+    // Add the "Bearer" token to the Authorization header
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  
+  return config;
+}, (error) => {
+  return Promise.reject(error);
+});
+
+// --- AUTH ROUTES ---
 export const signUp = (userData) => API.post('/auth/signup', userData);
 export const login = (userData) => API.post('/auth/login', userData);
 
-// Log Routes
-// Note: Adjusted '/logs/save' to '/logs' to match standard REST patterns 
-// unless your backend specifically has a router.post('/save')
-export const saveLog = (logData) => API.post('/logs', logData); 
+// --- LOG ROUTES ---
+// Fixed: Added '/save' to match your backend route in logs.js
+export const saveLog = (logData) => API.post('/logs/save', logData);
 export const getLogs = (userId) => API.get(`/logs/${userId}`);
 
 export default API;
