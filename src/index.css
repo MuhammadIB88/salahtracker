@@ -1,0 +1,15 @@
+/* index.css reset */
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: flex-start; /* Keeps the app at the top of the screen */
+  justify-content: center;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: #f4f7f6; /* Matching your new background */
+}
