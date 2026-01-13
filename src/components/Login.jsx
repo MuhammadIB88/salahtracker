@@ -58,9 +58,7 @@ const Login = ({ setUser }) => {
               Sign In
             </button>
             
-            <p style={{ textAlign: 'center', fontSize: '14px', color: '#888', marginTop: '10px' }}>
-              Don't have an account? <span style={{ color: '#4CAF50', cursor: 'pointer' }}>Register</span>
-            </p>
+            
           </form>
         </div>
       </div>

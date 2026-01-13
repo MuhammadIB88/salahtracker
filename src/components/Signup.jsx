@@ -89,9 +89,7 @@ const Signup = () => {
               Create Account
             </button>
 
-            <p style={{ textAlign: 'center', fontSize: '14px', color: '#888', marginTop: '10px' }}>
-              Already have an account? <span style={{ color: '#4CAF50', cursor: 'pointer', fontWeight: 'bold' }}>Login</span>
-            </p>
+           
           </form>
         </div>
       </div>
