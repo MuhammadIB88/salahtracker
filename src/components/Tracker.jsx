@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { saveLog, getLogs } from '../api';
 import logo from '../assets/logo.png';
-// Import the location library
 import { Country, State, City } from 'country-state-city';
 
 const prayersList = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"];
@@ -10,16 +9,14 @@ const prayersList = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"];
 const Tracker = ({ user }) => {
   const [trackerData, setTrackerData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(Notification.permission === 'granted');
   
-  // 1. Initialize with user's profile location from login
   const [location, setLocation] = useState({ 
     city: user.state || 'Lagos', 
     country: user.country || 'Nigeria' 
   });
 
   const [isEditingLoc, setIsEditingLoc] = useState(false);
-  
-  // LocInput stores the selection IDs/Names for the dropdowns during editing
   const [locInput, setLocInput] = useState({ 
     countryCode: '', 
     stateCode: '', 
@@ -54,19 +51,44 @@ const Tracker = ({ user }) => {
     return "Can do better";
   };
 
+  // --- NOTIFICATION SYNC LOGIC ---
+  const syncAzaanNotifications = () => {
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      const prayerTimes = {};
+      trackerData.forEach(p => {
+        prayerTimes[p.name] = p.actual;
+      });
+
+      navigator.serviceWorker.controller.postMessage({
+        type: 'SCHEDULE_AZAAN',
+        prayerTimes: prayerTimes
+      });
+    }
+  };
+
+  const enableNotifications = async () => {
+    if (!("Notification" in window)) {
+      alert("This browser does not support notifications.");
+      return;
+    }
+    const permission = await Notification.requestPermission();
+    if (permission === "granted") {
+      setNotificationsEnabled(true);
+      syncAzaanNotifications();
+      alert("Azaan notifications enabled! 🔔");
+    }
+  };
+
   useEffect(() => {
     const initialize = async () => {
       setLoading(true);
       try {
         const today = getTodayString();
-        
-        // Fetch Azaan Times from Aladhan API based on current location state
         const apiRes = await axios.get(
           `https://api.aladhan.com/v1/timingsByCity?city=${location.city}&country=${location.country}&method=3`
         );
         const timings = apiRes.data.data.timings;
 
-        // Fetch user history to see if today is already logged
         const historyRes = await getLogs(user.id);
         const serverLog = historyRes.data.find(log => log.date === today);
         const localBackup = JSON.parse(localStorage.getItem(`tracker_${today}_${user.id}`)) || {};
@@ -74,8 +96,6 @@ const Tracker = ({ user }) => {
         const mergedData = prayersList.map(name => {
           const apiTime = timings[name].match(/\d{2}:\d{2}/)[0];
           const savedFromDB = serverLog?.prayers?.find(p => p.name === name);
-          
-          // Match keys from your Log Schema (observedTime)
           const savedTime = savedFromDB?.observedTime || savedFromDB?.observed || localBackup[name] || "";
           
           return {
@@ -95,6 +115,13 @@ const Tracker = ({ user }) => {
     };
     initialize();
   }, [user, location]);
+
+  // Sync notifications whenever data is ready or changed
+  useEffect(() => {
+    if (notificationsEnabled && trackerData.length > 0) {
+      syncAzaanNotifications();
+    }
+  }, [trackerData, notificationsEnabled]);
 
   const handleTimeChange = (index, val) => {
     const updated = [...trackerData];
@@ -125,8 +152,8 @@ const Tracker = ({ user }) => {
         location: { city: location.city, country: location.country },
         prayers: trackerData.map(p => ({
           name: p.name,
-          actualTime: p.actual,   // Matches your Log Schema
-          observedTime: p.observed, // Matches your Log Schema
+          actualTime: p.actual,
+          observedTime: p.observed,
           remark: p.observed ? `${calculateRemark(p.actual, p.observed)} (${format12h(p.observed)})` : p.remark
         }))
       };
@@ -137,7 +164,6 @@ const Tracker = ({ user }) => {
     }
   };
 
-  // Logic for the Dropdown lists
   const countries = Country.getAllCountries();
   const states = locInput.countryCode ? State.getStatesOfCountry(locInput.countryCode) : [];
   const cities = (locInput.countryCode && locInput.stateCode) ? City.getCitiesOfState(locInput.countryCode, locInput.stateCode) : [];
@@ -150,8 +176,7 @@ const Tracker = ({ user }) => {
         <div className="logo-container"><img src={logo} alt="Logo" className="app-logo" /></div>
         <h2>Daily Tracker</h2>
         
-        {/* --- DYNAMIC LOCATION SECTION --- */}
-        <div className="location-pill" style={{ backgroundColor: '#f0f4f8', padding: '15px', borderRadius: '12px', marginBottom: '20px' }}>
+        <div className="location-pill" style={{ backgroundColor: '#f0f4f8', padding: '15px', borderRadius: '12px', marginBottom: '10px' }}>
           {!isEditingLoc ? (
             <div className="location-display" onClick={() => setIsEditingLoc(true)} style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontWeight: '500' }}>📍 {location.city}, {location.country}</span>
@@ -159,35 +184,18 @@ const Tracker = ({ user }) => {
             </div>
           ) : (
             <div className="location-form" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <select 
-                className="time-input" 
-                onChange={(e) => setLocInput({ ...locInput, countryCode: e.target.value, stateCode: '', cityName: '' })}
-                style={{ width: '100%' }}
-              >
+              <select className="time-input" onChange={(e) => setLocInput({ ...locInput, countryCode: e.target.value, stateCode: '', cityName: '' })} style={{ width: '100%' }}>
                 <option value="">Select Country</option>
                 {countries.map(c => <option key={c.isoCode} value={c.isoCode}>{c.name}</option>)}
               </select>
-
-              <select 
-                className="time-input" 
-                disabled={!locInput.countryCode}
-                onChange={(e) => setLocInput({ ...locInput, stateCode: e.target.value, cityName: '' })}
-                style={{ width: '100%' }}
-              >
+              <select className="time-input" disabled={!locInput.countryCode} onChange={(e) => setLocInput({ ...locInput, stateCode: e.target.value, cityName: '' })} style={{ width: '100%' }}>
                 <option value="">Select State</option>
                 {states.map(s => <option key={s.isoCode} value={s.isoCode}>{s.name}</option>)}
               </select>
-
-              <select 
-                className="time-input" 
-                disabled={!locInput.stateCode}
-                onChange={(e) => setLocInput({ ...locInput, cityName: e.target.value })}
-                style={{ width: '100%' }}
-              >
+              <select className="time-input" disabled={!locInput.stateCode} onChange={(e) => setLocInput({ ...locInput, cityName: e.target.value })} style={{ width: '100%' }}>
                 <option value="">Select City</option>
                 {cities.length > 0 ? cities.map(ct => <option key={ct.name} value={ct.name}>{ct.name}</option>) : <option value={locInput.stateCode}>Use State as City</option>}
               </select>
-
               <div style={{ display: 'flex', gap: '8px' }}>
                 <button onClick={updateLocation} className="save-btn" style={{ flex: 1, padding: '10px', fontSize: '14px' }}>Update</button>
                 <button onClick={() => setIsEditingLoc(false)} style={{ flex: 1, padding: '10px', fontSize: '14px', backgroundColor: '#888' }}>Cancel</button>
@@ -195,9 +203,34 @@ const Tracker = ({ user }) => {
             </div>
           )}
         </div>
+
+        {/* --- NOTIFICATION TOGGLE --- */}
+        <div style={{ marginBottom: '20px' }}>
+          {!notificationsEnabled ? (
+            <button 
+              onClick={enableNotifications}
+              style={{ 
+                backgroundColor: '#2e7d32', 
+                color: 'white', 
+                padding: '12px', 
+                borderRadius: '10px', 
+                width: '100%', 
+                border: 'none', 
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+              }}
+            >
+              🔔 Enable Azaan Alerts
+            </button>
+          ) : (
+            <div style={{ textAlign: 'center', color: '#2e7d32', fontSize: '14px', fontWeight: '600', padding: '10px', backgroundColor: '#e8f5e9', borderRadius: '10px' }}>
+              ✅ Azaan Alerts Active for {location.city}
+            </div>
+          )}
+        </div>
       </header>
 
-      {/* --- PRAYER LIST --- */}
       {trackerData.map((salah, index) => (
         <div key={salah.name} className="prayer-card" style={{ marginBottom: '12px' }}>
           <div className="salah-info">
@@ -221,11 +254,7 @@ const Tracker = ({ user }) => {
         </div>
       ))}
       
-      <button 
-        className="save-btn" 
-        onClick={handleSave} 
-        style={{ width: '100%', padding: '15px', marginTop: '20px', fontWeight: 'bold', fontSize: '16px' }}
-      >
+      <button className="save-btn" onClick={handleSave} style={{ width: '100%', padding: '15px', marginTop: '10px', fontWeight: 'bold', fontSize: '16px' }}>
         Save Progress
       </button>
     </div>
