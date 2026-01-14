@@ -62,7 +62,7 @@ const Tracker = ({ user }) => {
         
         // Fetch Azaan Times from Aladhan API based on current location state
         const apiRes = await axios.get(
-          `https://api.aladhan.com/v1/timingsByCity?city=${location.city}&country=${location.country}&method=2`
+          `https://api.aladhan.com/v1/timingsByCity?city=${location.city}&country=${location.country}&method=3`
         );
         const timings = apiRes.data.data.timings;
 
