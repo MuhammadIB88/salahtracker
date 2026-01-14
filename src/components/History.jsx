@@ -12,7 +12,8 @@ const History = ({ user }) => {
       try {
         const response = await getLogs(user.id);
         const data = Array.isArray(response.data) ? response.data : [];
-        const sorted = data.sort((a, b) => new Date(b.date) - new Date(a.date));
+        // Stable sort for date strings
+        const sorted = data.sort((a, b) => b.date.localeCompare(a.date));
         setLogs(sorted);
         calculateStats(sorted);
       } catch (err) {
@@ -26,16 +27,19 @@ const History = ({ user }) => {
 
   const calculateStats = (allLogs) => {
     const now = new Date();
-    const currentMonth = now.getMonth();
+    const currentMonth = now.getMonth() + 1; // JS months are 0-11
     const currentYear = now.getFullYear();
+    
     let excellentCount = 0;
     let prayersLogged = 0;
 
     allLogs.forEach(log => {
-      const logDate = new Date(log.date);
-      if (logDate.getMonth() === currentMonth && logDate.getFullYear() === currentYear) {
+      // Split "YYYY-MM-DD" safely without timezone shifts
+      const [year, month] = log.date.split('-').map(Number);
+      
+      if (month === currentMonth && year === currentYear) {
         log.prayers?.forEach(p => {
-          if (p.remark) {
+          if (p.remark && p.remark !== "--:--") {
             prayersLogged++;
             if (p.remark.includes('Excellent')) excellentCount++;
           }
@@ -45,7 +49,6 @@ const History = ({ user }) => {
     setStats({ excellent: excellentCount, totalLogged: prayersLogged });
   };
 
-  // --- SHARE FUNCTION ---
   const handleShare = async () => {
     const monthName = new Date().toLocaleString('default', { month: 'long' });
     const shareText = `🌙 My Salah Journey Update (${monthName}):\n✨ ${stats.excellent} Excellent Prayers\n📊 ${stats.totalLogged} Total Logged\n\nTracking my progress on Salah Tracker!`;
@@ -61,7 +64,6 @@ const History = ({ user }) => {
         console.log('Share failed', err);
       }
     } else {
-      // Fallback: Copy to clipboard if Web Share API isn't supported
       navigator.clipboard.writeText(shareText);
       alert("Progress copied to clipboard! 📋");
     }
@@ -70,12 +72,13 @@ const History = ({ user }) => {
   const formatDate = (dateStr) => {
     if (!dateStr) return "";
     const [year, month, day] = dateStr.split('-').map(Number);
+    // Create date using local time to avoid "one day off" errors
     const date = new Date(year, month - 1, day);
     return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
   };
 
   const renderBadgeContent = (remark) => {
-    if (!remark || remark === "--:--") return "--:--";
+    if (!remark || remark === "--:--" || remark === "Pending") return "--:--";
     if (remark.includes('(')) {
       const [status, time] = remark.split(' (');
       return (
