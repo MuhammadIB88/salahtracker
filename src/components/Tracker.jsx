@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { saveLog, getLogs } from '../api';
+// Added updateFCMToken to the imports
+import { saveLog, getLogs, updateFCMToken } from '../api';
 import logo from '../assets/logo.png';
 import { Country, State, City } from 'country-state-city';
-// 1. IMPORT the requestForToken function
 import { requestForToken } from '../firebase'; 
 
 const prayersList = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"];
@@ -25,10 +25,16 @@ const Tracker = ({ user }) => {
     cityName: '' 
   });
 
-  // 2. ADD this useEffect to request the Firebase Token on mount
+  // Updated useEffect to request token AND save it to backend
   useEffect(() => {
-    requestForToken();
-  }, []);
+    requestForToken().then(token => {
+      if (token && user.id) {
+        updateFCMToken(user.id, token)
+          .then(() => console.log("Device synced with database"))
+          .catch(err => console.error("Database sync failed", err));
+      }
+    });
+  }, [user.id]);
 
   const getTodayString = () => {
     const date = new Date();
@@ -80,8 +86,11 @@ const Tracker = ({ user }) => {
     const permission = await Notification.requestPermission();
     if (permission === "granted") {
       setNotificationsEnabled(true);
-      // This calls both the Firebase logic and your local sync
-      requestForToken(); 
+      // Get token and save to database immediately on click
+      const token = await requestForToken(); 
+      if (token && user.id) {
+        await updateFCMToken(user.id, token);
+      }
       syncAzaanNotifications();
       alert("Azaan notifications enabled! 🔔");
     }

@@ -24,8 +24,10 @@ API.interceptors.request.use((config) => {
 export const signUp = (userData) => API.post('/auth/signup', userData);
 export const login = (userData) => API.post('/auth/login', userData);
 
+// --- NEW: Update FCM Token ---
+export const updateFCMToken = (userId, fcmToken) => API.post('/auth/update-fcm-token', { userId, fcmToken });
+
 // --- LOG ROUTES ---
-// Fixed: Added '/save' to match your backend route in logs.js
 export const saveLog = (logData) => API.post('/logs/save', logData);
 export const getLogs = (userId) => API.get(`/logs/${userId}`);
 
