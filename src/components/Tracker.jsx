@@ -25,15 +25,9 @@ const Tracker = ({ user }) => {
     cityName: '' 
   });
 
-  // 2. UPDATED useEffect to show an alert with the token for mobile testing
+  // 2. ADD this useEffect to request the Firebase Token on mount
   useEffect(() => {
-    requestForToken().then(token => {
-      if (token) {
-        console.log("Token:", token);
-        // This will pop up on your phone so you can see the token
-        alert("Copy this token for Firebase test: " + token);
-      }
-    });
+    requestForToken();
   }, []);
 
   const getTodayString = () => {
@@ -86,8 +80,8 @@ const Tracker = ({ user }) => {
     const permission = await Notification.requestPermission();
     if (permission === "granted") {
       setNotificationsEnabled(true);
-      const token = await requestForToken(); 
-      if (token) alert("Token: " + token);
+      // This calls both the Firebase logic and your local sync
+      requestForToken(); 
       syncAzaanNotifications();
       alert("Azaan notifications enabled! 🔔");
     }
