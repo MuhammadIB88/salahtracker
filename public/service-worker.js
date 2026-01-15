@@ -39,8 +39,8 @@ function scheduleNotification(prayerName, timeString) {
   setTimeout(() => {
     self.registration.showNotification('Salah Tracker', {
       body: `It's time for ${prayerName}. Assalamu Alaikum!`,
-      icon: '/logo192.png', 
-      badge: '/logo192.png',
+      icon: '/logo.png', 
+      badge: '/logo.png',
       tag: prayerName, // Unique tag per prayer
       renotify: true, // Vibrate/Alert even if a previous notification is present
       requireInteraction: true, 

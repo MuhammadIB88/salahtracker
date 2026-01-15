@@ -3,6 +3,8 @@ import axios from 'axios';
 import { saveLog, getLogs } from '../api';
 import logo from '../assets/logo.png';
 import { Country, State, City } from 'country-state-city';
+// 1. IMPORT the requestForToken function
+import { requestForToken } from '../firebase'; 
 
 const prayersList = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"];
 
@@ -22,6 +24,11 @@ const Tracker = ({ user }) => {
     stateCode: '', 
     cityName: '' 
   });
+
+  // 2. ADD this useEffect to request the Firebase Token on mount
+  useEffect(() => {
+    requestForToken();
+  }, []);
 
   const getTodayString = () => {
     const date = new Date();
@@ -73,6 +80,8 @@ const Tracker = ({ user }) => {
     const permission = await Notification.requestPermission();
     if (permission === "granted") {
       setNotificationsEnabled(true);
+      // This calls both the Firebase logic and your local sync
+      requestForToken(); 
       syncAzaanNotifications();
       alert("Azaan notifications enabled! 🔔");
     }
@@ -170,7 +179,6 @@ const Tracker = ({ user }) => {
         </div>
         <h2 style={{ marginBottom: '15px' }}>Daily Tracker</h2>
         
-        {/* IMPROVED LOCATION PILL */}
         <div style={{ padding: '0 24px' }}>
             {!isEditingLoc ? (
             <div 
@@ -240,7 +248,6 @@ const Tracker = ({ user }) => {
             )}
         </div>
 
-        {/* --- REFINED AZAAN ALERTS BANNER --- */}
         <div style={{ margin: '20px 24px 10px' }}>
           {!notificationsEnabled ? (
             <button onClick={enableNotifications} className="save-btn" style={{ margin: '0', width: '100%', padding: '14px', fontSize: '14px' }}>
