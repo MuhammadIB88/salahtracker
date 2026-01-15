@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { signUp } from '../api'; 
 import logo from '../assets/logo.png';
-// Import the location library
 import { Country, State } from 'country-state-city';
-// Import icons for the password toggle
 import { Eye, EyeOff } from 'lucide-react';
 
 const Signup = () => {
@@ -29,38 +27,44 @@ const Signup = () => {
     }
   };
 
-  const inputStyle = { width: '100%', textAlign: 'left', padding: '12px', marginBottom: '5px', border: '1px solid #ddd', borderRadius: '4px' };
+  // Using simple padding; border/radius are handled by the .time-input class in CSS
+  const inputStyle = { width: '100%', textAlign: 'left', padding: '12px' };
 
   return (
-    <div className="history-wrapper">
+    <div className="signup-wrapper">
       <header>
         <div className="logo-container">
           <img src={logo} alt="Logo" className="app-logo" />
         </div>
         <h2>Create Account</h2>
+        <p className="date-text" style={{ color: 'var(--text-muted)' }}>Join the community</p>
       </header>
 
       <div className="history-list">
-        <div className="history-day-card" style={{ padding: '25px', marginBottom: '50px' }}>
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div className="history-day-card" style={{ padding: '24px', margin: '0 16px 40px' }}>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             
-            <input 
-              className="time-input" 
-              style={inputStyle}
-              type="text" 
-              placeholder="Full Name" 
-              onChange={(e) => setFormData({...formData, name: e.target.value})} 
-              required 
-            />
+            <div>
+              <input 
+                className="time-input" 
+                style={inputStyle}
+                type="text" 
+                placeholder="Full Name" 
+                onChange={(e) => setFormData({...formData, name: e.target.value})} 
+                required 
+              />
+            </div>
 
-            <input 
-              className="time-input" 
-              style={inputStyle}
-              type="email" 
-              placeholder="Email Address" 
-              onChange={(e) => setFormData({...formData, email: e.target.value})} 
-              required 
-            />
+            <div>
+              <input 
+                className="time-input" 
+                style={inputStyle}
+                type="email" 
+                placeholder="Email Address" 
+                onChange={(e) => setFormData({...formData, email: e.target.value})} 
+                required 
+              />
+            </div>
 
             {/* PASSWORD FIELD WITH TOGGLE */}
             <div style={{ position: 'relative' }}>
@@ -74,24 +78,34 @@ const Signup = () => {
               />
               <div 
                 onClick={() => setShowPassword(!showPassword)}
-                style={{ position: 'absolute', right: '10px', top: '30%', cursor: 'pointer', color: '#888' }}
+                style={{ 
+                  position: 'absolute', 
+                  right: '12px', 
+                  top: '50%', 
+                  transform: 'translateY(-50%)', 
+                  cursor: 'pointer', 
+                  color: 'var(--text-muted)',
+                  display: 'flex',
+                  alignItems: 'center'
+                }}
               >
-                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </div>
             </div>
 
             <div style={{ display: 'flex', gap: '10px' }}>
               {/* COUNTRY SELECTOR */}
               <select 
-                style={inputStyle}
+                className="time-input"
+                style={{ ...inputStyle, flex: 1 }}
                 required
                 onChange={(e) => {
                   const country = countries.find(c => c.isoCode === e.target.value);
                   setSelectedCountryCode(e.target.value);
-                  setFormData({...formData, country: country.name, state: ''}); // Save name, reset state
+                  setFormData({...formData, country: country?.name || '', state: ''}); 
                 }}
               >
-                <option value="">Select Country</option>
+                <option value="">Country</option>
                 {countries.map((c) => (
                   <option key={c.isoCode} value={c.isoCode}>{c.name}</option>
                 ))}
@@ -99,19 +113,20 @@ const Signup = () => {
 
               {/* STATE SELECTOR */}
               <select 
-                style={inputStyle}
+                className="time-input"
+                style={{ ...inputStyle, flex: 1 }}
                 required
                 disabled={!selectedCountryCode}
                 onChange={(e) => setFormData({...formData, state: e.target.value})}
               >
-                <option value="">Select State/City</option>
+                <option value="">State/City</option>
                 {states.map((s) => (
                   <option key={s.isoCode} value={s.name}>{s.name}</option>
                 ))}
               </select>
             </div>
 
-            <button className="save-btn" type="submit" style={{ marginTop: '15px' }}>
+            <button className="save-btn" type="submit" style={{ margin: '10px 0 0 0', width: '100%' }}>
               Create Account
             </button>
           </form>

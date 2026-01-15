@@ -116,7 +116,6 @@ const Tracker = ({ user }) => {
     initialize();
   }, [user, location]);
 
-  // Sync notifications whenever data is ready or changed
   useEffect(() => {
     if (notificationsEnabled && trackerData.length > 0) {
       syncAzaanNotifications();
@@ -171,71 +170,74 @@ const Tracker = ({ user }) => {
   if (loading) return <div className="loading-state">Syncing Journey...</div>;
 
   return (
-    <div className="tracker-body">
+    <div className="tracker-wrapper">
       <header>
-        <div className="logo-container"><img src={logo} alt="Logo" className="app-logo" /></div>
+        <div className="logo-container">
+          <img src={logo} alt="Logo" className="app-logo" />
+        </div>
         <h2>Daily Tracker</h2>
         
-        <div className="location-pill" style={{ backgroundColor: '#f0f4f8', padding: '15px', borderRadius: '12px', marginBottom: '10px' }}>
+        <div className="location-pill">
           {!isEditingLoc ? (
-            <div className="location-display" onClick={() => setIsEditingLoc(true)} style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontWeight: '500' }}>📍 {location.city}, {location.country}</span>
-              <button className="loc-edit-btn" style={{ fontSize: '12px', padding: '5px 10px', borderRadius: '5px' }}>Change Location</button>
+            <div className="location-display" onClick={() => setIsEditingLoc(true)}>
+              <span>📍 {location.city}, {location.country}</span>
+              <button className="loc-edit-btn">Change</button>
             </div>
           ) : (
-            <div className="location-form" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <select className="time-input" onChange={(e) => setLocInput({ ...locInput, countryCode: e.target.value, stateCode: '', cityName: '' })} style={{ width: '100%' }}>
+            <div className="location-form">
+              <select 
+                className="time-input" 
+                onChange={(e) => setLocInput({ ...locInput, countryCode: e.target.value, stateCode: '', cityName: '' })}
+                style={{ width: '100%' }}
+              >
                 <option value="">Select Country</option>
                 {countries.map(c => <option key={c.isoCode} value={c.isoCode}>{c.name}</option>)}
               </select>
-              <select className="time-input" disabled={!locInput.countryCode} onChange={(e) => setLocInput({ ...locInput, stateCode: e.target.value, cityName: '' })} style={{ width: '100%' }}>
+              <select 
+                className="time-input" 
+                disabled={!locInput.countryCode} 
+                onChange={(e) => setLocInput({ ...locInput, stateCode: e.target.value, cityName: '' })}
+                style={{ width: '100%' }}
+              >
                 <option value="">Select State</option>
                 {states.map(s => <option key={s.isoCode} value={s.isoCode}>{s.name}</option>)}
               </select>
-              <select className="time-input" disabled={!locInput.stateCode} onChange={(e) => setLocInput({ ...locInput, cityName: e.target.value })} style={{ width: '100%' }}>
+              <select 
+                className="time-input" 
+                disabled={!locInput.stateCode} 
+                onChange={(e) => setLocInput({ ...locInput, cityName: e.target.value })}
+                style={{ width: '100%' }}
+              >
                 <option value="">Select City</option>
                 {cities.length > 0 ? cities.map(ct => <option key={ct.name} value={ct.name}>{ct.name}</option>) : <option value={locInput.stateCode}>Use State as City</option>}
               </select>
               <div style={{ display: 'flex', gap: '8px' }}>
-                <button onClick={updateLocation} className="save-btn" style={{ flex: 1, padding: '10px', fontSize: '14px' }}>Update</button>
-                <button onClick={() => setIsEditingLoc(false)} style={{ flex: 1, padding: '10px', fontSize: '14px', backgroundColor: '#888' }}>Cancel</button>
+                <button onClick={updateLocation} className="loc-save-btn" style={{ flex: 2 }}>Update</button>
+                <button onClick={() => setIsEditingLoc(false)} className="loc-cancel-btn">Cancel</button>
               </div>
             </div>
           )}
         </div>
 
         {/* --- NOTIFICATION TOGGLE --- */}
-        <div style={{ marginBottom: '20px' }}>
+        <div style={{ margin: '15px 16px 5px' }}>
           {!notificationsEnabled ? (
-            <button 
-              onClick={enableNotifications}
-              style={{ 
-                backgroundColor: '#2e7d32', 
-                color: 'white', 
-                padding: '12px', 
-                borderRadius: '10px', 
-                width: '100%', 
-                border: 'none', 
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-              }}
-            >
+            <button onClick={enableNotifications} className="save-btn" style={{ margin: '0', width: '100%' }}>
               🔔 Enable Azaan Alerts
             </button>
           ) : (
-            <div style={{ textAlign: 'center', color: '#2e7d32', fontSize: '14px', fontWeight: '600', padding: '10px', backgroundColor: '#e8f5e9', borderRadius: '10px' }}>
-              ✅ Azaan Alerts Active for {location.city}
+            <div style={{ textAlign: 'center', color: 'var(--primary-dark)', fontSize: '13px', fontWeight: '700', padding: '12px', background: 'var(--accent-soft)', borderRadius: '14px' }}>
+              ✅ Azaan Alerts Active
             </div>
           )}
         </div>
       </header>
 
       {trackerData.map((salah, index) => (
-        <div key={salah.name} className="prayer-card" style={{ marginBottom: '12px' }}>
+        <div key={salah.name} className="prayer-card">
           <div className="salah-info">
-            <h4 style={{ margin: 0 }}>{salah.name}</h4>
-            <span className="azaan-time" style={{ color: '#2e7d32', fontWeight: 'bold' }}>
+            <h4>{salah.name}</h4>
+            <span className="azaan-time">
               Azaan: {format12h(salah.actual)}
             </span>
           </div>
@@ -245,16 +247,15 @@ const Tracker = ({ user }) => {
               className="time-input"
               value={salah.observed || ""} 
               onChange={(e) => handleTimeChange(index, e.target.value)}
-              style={{ padding: '8px' }}
             />
-            <div className="remark-text" style={{ fontSize: '12px', marginTop: '4px', fontWeight: '600' }}>
+            <div className={`remark-text ${salah.remark.includes('Excellent') ? 'remark-excellent' : ''}`}>
                {salah.remark || "Pending"}
             </div>
           </div>
         </div>
       ))}
       
-      <button className="save-btn" onClick={handleSave} style={{ width: '100%', padding: '15px', marginTop: '10px', fontWeight: 'bold', fontSize: '16px' }}>
+      <button className="save-btn" onClick={handleSave}>
         Save Progress
       </button>
     </div>

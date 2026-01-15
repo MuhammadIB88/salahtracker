@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
 import { login } from '../api';
 import logo from '../assets/logo.png';
-// 1. Import the icons
 import { Eye, EyeOff } from 'lucide-react';
 
 const Login = ({ setUser }) => {
   const [formData, setFormData] = useState({ email: '', password: '' });
-  // 2. State to track if password is shown
   const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -14,9 +12,8 @@ const Login = ({ setUser }) => {
     try {
       const { data } = await login(formData);
       
-      // 3. Save separately so Interceptor and App can both find what they need
-      localStorage.setItem('token', data.token); // For the API interceptor
-      localStorage.setItem('profile', JSON.stringify(data)); // For the user state
+      localStorage.setItem('token', data.token); 
+      localStorage.setItem('profile', JSON.stringify(data)); 
       
       setUser(data.user);
     } catch (err) {
@@ -24,23 +21,27 @@ const Login = ({ setUser }) => {
     }
   };
 
+  // Simplified style, as box-sizing: border-box in App.css now handles padding correctly
   const inputStyle = { width: '100%', textAlign: 'left', padding: '12px' };
 
   return (
-    <div className="history-wrapper">
+    <div className="login-wrapper">
       <header>
         <div className="logo-container">
           <img src={logo} alt="Logo" className="app-logo" />
         </div>
         <h2>Welcome Back</h2>
+        <p className="date-text" style={{ color: 'var(--text-muted)' }}>Sign in to continue your journey</p>
       </header>
 
       <div className="history-list">
-        <div className="history-day-card" style={{ padding: '30px' }}>
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+        <div className="history-day-card" style={{ padding: '24px', margin: '0 16px' }}>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             
             <div className="login-input-group">
-              <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', color: '#666' }}>Email Address</label>
+              <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: '600', color: 'var(--text-muted)' }}>
+                Email Address
+              </label>
               <input 
                 className="time-input" 
                 style={inputStyle}
@@ -52,13 +53,13 @@ const Login = ({ setUser }) => {
             </div>
 
             <div className="login-input-group">
-              <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', color: '#666' }}>Password</label>
-              {/* 4. Wrap in a relative div to position the eye icon */}
+              <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: '600', color: 'var(--text-muted)' }}>
+                Password
+              </label>
               <div style={{ position: 'relative' }}>
                 <input 
                   className="time-input" 
                   style={inputStyle}
-                  // 5. Toggle type between password and text
                   type={showPassword ? "text" : "password"} 
                   placeholder="••••••••" 
                   onChange={(e) => setFormData({...formData, password: e.target.value})} 
@@ -68,21 +69,21 @@ const Login = ({ setUser }) => {
                   onClick={() => setShowPassword(!showPassword)}
                   style={{ 
                     position: 'absolute', 
-                    right: '10px', 
+                    right: '12px', 
                     top: '50%', 
                     transform: 'translateY(-50%)', 
                     cursor: 'pointer', 
-                    color: '#888',
+                    color: 'var(--text-muted)',
                     display: 'flex',
                     alignItems: 'center'
                   }}
                 >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </div>
               </div>
             </div>
 
-            <button className="save-btn" type="submit" style={{ marginTop: '10px' }}>
+            <button className="save-btn" type="submit" style={{ margin: '10px 0 0 0', width: '100%' }}>
               Sign In
             </button>
           </form>

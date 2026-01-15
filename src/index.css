@@ -4,12 +4,27 @@
   line-height: 1.5;
 }
 
-body {
+/* Prevent horizontal scroll and "bounce" on mobile */
+html, body {
   margin: 0;
+  padding: 0;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+  position: relative;
+  background-color: #0f172a; /* Match your App.css bg-main */
+}
+
+body {
   display: flex;
-  place-items: flex-start; /* Keeps the app at the top of the screen */
+  place-items: flex-start;
   justify-content: center;
-  min-width: 320px;
   min-height: 100vh;
-  background-color: #f4f7f6; /* Matching your new background */
+}
+
+/* Ensure the root React container fills the screen correctly */
+#root {
+  width: 100%;
+  display: flex;
+  justify-content: center;
 }
