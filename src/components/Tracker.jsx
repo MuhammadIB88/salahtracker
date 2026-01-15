@@ -51,7 +51,6 @@ const Tracker = ({ user }) => {
     return "Can do better";
   };
 
-  // --- NOTIFICATION SYNC LOGIC ---
   const syncAzaanNotifications = () => {
     if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
       const prayerTimes = {};
@@ -116,12 +115,6 @@ const Tracker = ({ user }) => {
     initialize();
   }, [user, location]);
 
-  useEffect(() => {
-    if (notificationsEnabled && trackerData.length > 0) {
-      syncAzaanNotifications();
-    }
-  }, [trackerData, notificationsEnabled]);
-
   const handleTimeChange = (index, val) => {
     const updated = [...trackerData];
     updated[index].observed = val;
@@ -171,91 +164,133 @@ const Tracker = ({ user }) => {
 
   return (
     <div className="tracker-wrapper">
-      <header>
+      <header style={{ paddingBottom: '10px' }}>
         <div className="logo-container">
           <img src={logo} alt="Logo" className="app-logo" />
         </div>
-        <h2>Daily Tracker</h2>
+        <h2 style={{ marginBottom: '15px' }}>Daily Tracker</h2>
         
-        <div className="location-pill">
-          {!isEditingLoc ? (
-            <div className="location-display" onClick={() => setIsEditingLoc(true)}>
-              <span>📍 {location.city}, {location.country}</span>
-              <button className="loc-edit-btn">Change</button>
+        {/* IMPROVED LOCATION PILL */}
+        <div style={{ padding: '0 24px' }}>
+            {!isEditingLoc ? (
+            <div 
+                onClick={() => setIsEditingLoc(true)}
+                style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    gap: '8px', 
+                    background: 'white', 
+                    padding: '10px 16px', 
+                    borderRadius: '50px', 
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                    cursor: 'pointer',
+                    width: 'fit-content',
+                    margin: '0 auto'
+                }}
+            >
+                <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-main)' }}>📍 {location.city}</span>
+                <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Change</span>
             </div>
-          ) : (
-            <div className="location-form">
-              <select 
+            ) : (
+            <div className="location-form" style={{ background: 'white', padding: '16px', borderRadius: '20px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}>
+                <select 
                 className="time-input" 
                 onChange={(e) => setLocInput({ ...locInput, countryCode: e.target.value, stateCode: '', cityName: '' })}
-                style={{ width: '100%' }}
-              >
+                style={{ width: '100%', marginBottom: '8px' }}
+                >
                 <option value="">Select Country</option>
                 {countries.map(c => <option key={c.isoCode} value={c.isoCode}>{c.name}</option>)}
-              </select>
-              <select 
+                </select>
+                <select 
                 className="time-input" 
                 disabled={!locInput.countryCode} 
                 onChange={(e) => setLocInput({ ...locInput, stateCode: e.target.value, cityName: '' })}
-                style={{ width: '100%' }}
-              >
+                style={{ width: '100%', marginBottom: '8px' }}
+                >
                 <option value="">Select State</option>
                 {states.map(s => <option key={s.isoCode} value={s.isoCode}>{s.name}</option>)}
-              </select>
-              <select 
+                </select>
+                <select 
                 className="time-input" 
                 disabled={!locInput.stateCode} 
                 onChange={(e) => setLocInput({ ...locInput, cityName: e.target.value })}
-                style={{ width: '100%' }}
-              >
+                style={{ width: '100%', marginBottom: '12px' }}
+                >
                 <option value="">Select City</option>
                 {cities.length > 0 ? cities.map(ct => <option key={ct.name} value={ct.name}>{ct.name}</option>) : <option value={locInput.stateCode}>Use State as City</option>}
-              </select>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <button onClick={updateLocation} className="loc-save-btn" style={{ flex: 2 }}>Update</button>
-                <button onClick={() => setIsEditingLoc(false)} className="loc-cancel-btn">Cancel</button>
-              </div>
+                </select>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                <button 
+                    onClick={updateLocation} 
+                    className="save-btn" 
+                    style={{ flex: 2, margin: 0, padding: '12px', fontSize: '14px' }}
+                >
+                    Update
+                </button>
+                <button 
+                    onClick={() => setIsEditingLoc(false)} 
+                    className="loc-cancel-btn"
+                    style={{ flex: 1 }}
+                >
+                    Cancel
+                </button>
+                </div>
             </div>
-          )}
+            )}
         </div>
 
-        {/* --- NOTIFICATION TOGGLE --- */}
-        <div style={{ margin: '15px 16px 5px' }}>
+        {/* --- REFINED AZAAN ALERTS BANNER --- */}
+        <div style={{ margin: '20px 24px 10px' }}>
           {!notificationsEnabled ? (
-            <button onClick={enableNotifications} className="save-btn" style={{ margin: '0', width: '100%' }}>
+            <button onClick={enableNotifications} className="save-btn" style={{ margin: '0', width: '100%', padding: '14px', fontSize: '14px' }}>
               🔔 Enable Azaan Alerts
             </button>
           ) : (
-            <div style={{ textAlign: 'center', color: 'var(--primary-dark)', fontSize: '13px', fontWeight: '700', padding: '12px', background: 'var(--accent-soft)', borderRadius: '14px' }}>
-              ✅ Azaan Alerts Active
+            <div style={{ 
+                textAlign: 'center', 
+                color: 'var(--primary-dark)', 
+                fontSize: '12px', 
+                fontWeight: '800', 
+                padding: '10px 16px', 
+                background: 'var(--accent-soft)', 
+                borderRadius: '50px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                border: '1px solid rgba(16, 185, 129, 0.2)'
+            }}>
+              <span style={{ fontSize: '14px' }}>✅</span> AZAAN ALERTS ACTIVE
             </div>
           )}
         </div>
       </header>
 
-      {trackerData.map((salah, index) => (
-        <div key={salah.name} className="prayer-card">
-          <div className="salah-info">
-            <h4>{salah.name}</h4>
-            <span className="azaan-time">
-              Azaan: {format12h(salah.actual)}
-            </span>
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <input 
-              type="time" 
-              className="time-input"
-              value={salah.observed || ""} 
-              onChange={(e) => handleTimeChange(index, e.target.value)}
-            />
-            <div className={`remark-text ${salah.remark.includes('Excellent') ? 'remark-excellent' : ''}`}>
-               {salah.remark || "Pending"}
+      <div style={{ paddingBottom: '20px' }}>
+        {trackerData.map((salah, index) => (
+            <div key={salah.name} className="prayer-card">
+            <div className="salah-info">
+                <h4>{salah.name}</h4>
+                <span className="azaan-time">
+                Azaan: {format12h(salah.actual)}
+                </span>
             </div>
-          </div>
-        </div>
-      ))}
+            <div style={{ textAlign: 'right' }}>
+                <input 
+                type="time" 
+                className="time-input"
+                value={salah.observed || ""} 
+                onChange={(e) => handleTimeChange(index, e.target.value)}
+                />
+                <div className={`remark-text ${salah.remark.includes('Excellent') ? 'remark-excellent' : ''}`}>
+                {salah.remark || "Pending"}
+                </div>
+            </div>
+            </div>
+        ))}
+      </div>
       
-      <button className="save-btn" onClick={handleSave}>
+      <button className="save-btn" onClick={handleSave} style={{ marginBottom: '40px' }}>
         Save Progress
       </button>
     </div>

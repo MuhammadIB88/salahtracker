@@ -12,7 +12,6 @@ const History = ({ user }) => {
       try {
         const response = await getLogs(user.id);
         const data = Array.isArray(response.data) ? response.data : [];
-        // Stable sort for date strings (Descending)
         const sorted = data.sort((a, b) => b.date.localeCompare(a.date));
         setLogs(sorted);
         calculateStats(sorted);
@@ -35,7 +34,6 @@ const History = ({ user }) => {
 
     allLogs.forEach(log => {
       const [year, month] = log.date.split('-').map(Number);
-      
       if (month === currentMonth && year === currentYear) {
         log.prayers?.forEach(p => {
           if (p.remark && p.remark !== "--:--") {
@@ -76,17 +74,19 @@ const History = ({ user }) => {
   };
 
   const renderBadgeContent = (remark) => {
-    if (!remark || remark === "--:--" || remark === "Pending") return "--:--";
+    if (!remark || remark === "--:--" || remark === "Pending") {
+      return <span style={{ textAlign: 'center', width: '100%' }}>{remark || "--:--"}</span>;
+    }
     if (remark.includes('(')) {
       const [status, time] = remark.split(' (');
       return (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: '1.2' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: '1.2', textAlign: 'center', width: '100%' }}>
           <span style={{ fontWeight: '700', fontSize: '10px' }}>{status}</span>
           <span style={{ fontSize: '8px', opacity: '0.8', fontWeight: '500' }}>{`(${time}`}</span>
         </div>
       );
     }
-    return remark;
+    return <span style={{ textAlign: 'center', width: '100%', fontWeight: '700', fontSize: '10px' }}>{remark}</span>;
   };
 
   if (loading) return <div className="loading-state">Loading Journey...</div>;
@@ -100,50 +100,51 @@ const History = ({ user }) => {
         <h2>Journey History</h2>
       </header>
 
-      <div className="summary-card" style={{ margin: '0 16px 20px' }}>
+      <div className="summary-card" style={{ margin: '0 12px 20px' }}>
         <div className="summary-header">
-            <span style={{ color: 'var(--text-muted)' }}>This Month's Progress</span>
+            <span style={{ color: 'rgba(255,255,255,0.7)' }}>This Month's Progress</span>
             <button className="share-pill-btn" onClick={handleShare}>
               Share ↗
             </button>
         </div>
-        <div className="summary-stats">
+        {/* Fixed grid for centered line */}
+        <div className="summary-stats" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', paddingTop: '15px' }}>
           <div className="stat-box">
             <span className="stat-value">{stats.excellent}</span>
             <span className="stat-label">Excellent</span>
           </div>
-          <div className="stat-box" style={{ borderLeft: '1px solid #f1f5f9' }}>
+          <div className="stat-box" style={{ borderLeft: '1px solid rgba(255,255,255,0.1)' }}>
             <span className="stat-value">{stats.totalLogged}</span>
             <span className="stat-label">Total Logged</span>
           </div>
         </div>
       </div>
       
-      <div className="history-list" style={{ paddingBottom: '40px' }}>
+      <div className="history-list" style={{ padding: '0 12px 40px' }}>
         {logs.length === 0 ? (
           <div className="empty-state" style={{ padding: '40px 20px', textAlign: 'center' }}>
             <p style={{ color: 'var(--text-muted)' }}>No history yet! ✨</p>
           </div>
         ) : (
           logs.map((log) => (
-            <div key={log._id || log.date} className="history-day-card" style={{ margin: '0 16px 12px' }}>
+            <div key={log._id || log.date} className="history-day-card" style={{ margin: '0 0 12px 0', padding: '16px 12px' }}>
               <div className="history-date-header" style={{ borderBottom: '1px solid #f8fafc', paddingBottom: '8px', marginBottom: '12px', fontWeight: '700', color: 'var(--primary-dark)' }}>
                 {formatDate(log.date)}
               </div>
-              <div className="history-prayers-grid">
+              <div className="history-prayers-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px' }}>
                 {["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"].map((pName) => {
                   const salah = log.prayers?.find(p => p.name === pName);
                   const remarkText = salah?.remark || "--:--";
                   
                   return (
                     <div key={pName} className="history-item">
-                      <span className="history-salah-name" style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                      <span className="history-salah-name" style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '4px' }}>
                         {pName}
                       </span>
                       <div className={`history-status-badge ${
                         remarkText.includes('Excellent') || remarkText.includes('Good') || remarkText.includes('Very Good') 
                         ? 'badge-excellent' : remarkText !== '--:--' ? 'badge-good' : 'badge-empty'
-                      }`} style={{ height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '10px' }}>
+                      }`} style={{ height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '10px', padding: '2px' }}>
                         {renderBadgeContent(remarkText)}
                       </div>
                     </div>
