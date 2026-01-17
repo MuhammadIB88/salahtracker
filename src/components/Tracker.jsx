@@ -145,11 +145,27 @@ const Tracker = ({ user }) => {
     localStorage.setItem(`tracker_${today}_${user.id}`, JSON.stringify(backupObj));
   };
 
-  const updateLocation = () => {
+  // --- UPDATED: THIS FUNCTION NOW SAVES TO DATABASE ---
+  const updateLocation = async () => {
     if (locInput.cityName && locInput.countryCode) {
       const countryName = Country.getCountryByCode(locInput.countryCode).name;
-      setLocation({ city: locInput.cityName, country: countryName });
-      setIsEditingLoc(false);
+      
+      try {
+        // 1. Tell the backend to update the database
+        await axios.post('https://salahtracker-backend.onrender.com/api/auth/update-location', {
+          userId: user.id,
+          country: countryName,
+          state: locInput.cityName
+        });
+
+        // 2. If successful, update the UI
+        setLocation({ city: locInput.cityName, country: countryName });
+        setIsEditingLoc(false);
+        console.log("Location updated in database ✅");
+      } catch (err) {
+        console.error("Failed to sync location with database:", err);
+        alert("Location updated locally, but failed to save to server. Please check your connection.");
+      }
     }
   };
 
