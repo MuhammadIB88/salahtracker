@@ -9,25 +9,25 @@ function App() {
   const [user, setUser] = useState(null);
   const [showLogin, setShowLogin] = useState(true);
   const [view, setView] = useState('tracker');
-  const [isAppLoading, setIsAppLoading] = useState(true); // New: prevents screen flash
+  const [isAppLoading, setIsAppLoading] = useState(true);
 
   useEffect(() => {
     const savedUser = localStorage.getItem('profile');
     if (savedUser) {
       try {
-        // Parse the whole object and set the user state
         const userData = JSON.parse(savedUser);
+        // This handles both the old format and the new format with 'city'
         setUser(userData.user || userData); 
       } catch (e) {
         console.error("Error parsing user profile", e);
       }
     }
-    setIsAppLoading(false); // Finished checking localStorage
+    setIsAppLoading(false);
   }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('profile');
-    localStorage.removeItem('token'); // Also remove the token we added earlier
+    localStorage.removeItem('token'); 
     setUser(null);
   };
 
@@ -68,8 +68,12 @@ function App() {
       <h1 style={{ color: '#2e7d32', textAlign: 'center', marginBottom: '10px' }}>Salah Tracker</h1>
       
       <div style={{ maxWidth: '400px', margin: '0 auto' }}>
-        {/* Added setUser to Signup so they log in immediately after signing up */}
-        {showLogin ? <Login setUser={setUser} /> : <Signup setUser={setUser} />}
+        {/* We pass setUser to both Login and Signup now */}
+        {showLogin ? (
+          <Login setUser={setUser} />
+        ) : (
+          <Signup setUser={setUser} />
+        )}
         
         <p style={{ textAlign: 'center', fontSize: '14px', color: '#888', marginTop: '15px' }}>
           {showLogin ? "Don't have an account? " : "Already have an account? "}

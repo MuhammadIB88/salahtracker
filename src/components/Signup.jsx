@@ -1,21 +1,22 @@
 import React, { useState } from 'react';
 import { signUp } from '../api'; 
 import logo from '../assets/logo.png';
-import { Country, State } from 'country-state-city';
+import { Country, State, City } from 'country-state-city'; // Added City import
 import { Eye, EyeOff } from 'lucide-react';
 
 const Signup = () => {
   const [formData, setFormData] = useState({
-    name: '', email: '', password: '', country: '', state: ''
+    name: '', email: '', password: '', country: '', state: '', city: '' // Added city field
   });
   
   const [showPassword, setShowPassword] = useState(false);
   const [selectedCountryCode, setSelectedCountryCode] = useState('');
+  const [selectedStateCode, setSelectedStateCode] = useState(''); // Added state code tracker
 
-  // Get all countries for the dropdown
   const countries = Country.getAllCountries();
-  // Get states based on selected country
   const states = selectedCountryCode ? State.getStatesOfCountry(selectedCountryCode) : [];
+  // Get cities based on country and state
+  const cities = (selectedCountryCode && selectedStateCode) ? City.getCitiesOfState(selectedCountryCode, selectedStateCode) : [];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -27,7 +28,6 @@ const Signup = () => {
     }
   };
 
-  // Using simple padding; border/radius are handled by the .time-input class in CSS
   const inputStyle = { width: '100%', textAlign: 'left', padding: '12px' };
 
   return (
@@ -66,7 +66,6 @@ const Signup = () => {
               />
             </div>
 
-            {/* PASSWORD FIELD WITH TOGGLE */}
             <div style={{ position: 'relative' }}>
               <input 
                 className="time-input" 
@@ -93,19 +92,20 @@ const Signup = () => {
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '10px' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
               {/* COUNTRY SELECTOR */}
               <select 
                 className="time-input"
-                style={{ ...inputStyle, flex: 1 }}
+                style={{ ...inputStyle, flex: '1 1 100%' }}
                 required
                 onChange={(e) => {
                   const country = countries.find(c => c.isoCode === e.target.value);
                   setSelectedCountryCode(e.target.value);
-                  setFormData({...formData, country: country?.name || '', state: ''}); 
+                  setSelectedStateCode(''); // Reset state/city
+                  setFormData({...formData, country: country?.name || '', state: '', city: ''}); 
                 }}
               >
-                <option value="">Country</option>
+                <option value="">Select Country</option>
                 {countries.map((c) => (
                   <option key={c.isoCode} value={c.isoCode}>{c.name}</option>
                 ))}
@@ -114,15 +114,37 @@ const Signup = () => {
               {/* STATE SELECTOR */}
               <select 
                 className="time-input"
-                style={{ ...inputStyle, flex: 1 }}
+                style={{ ...inputStyle, flex: '1 1 45%' }}
                 required
                 disabled={!selectedCountryCode}
-                onChange={(e) => setFormData({...formData, state: e.target.value})}
+                onChange={(e) => {
+                  const stateObj = states.find(s => s.isoCode === e.target.value);
+                  setSelectedStateCode(e.target.value);
+                  setFormData({...formData, state: stateObj?.name || '', city: ''});
+                }}
               >
-                <option value="">State/City</option>
+                <option value="">Select State</option>
                 {states.map((s) => (
-                  <option key={s.isoCode} value={s.name}>{s.name}</option>
+                  <option key={s.isoCode} value={s.isoCode}>{s.name}</option>
                 ))}
+              </select>
+
+              {/* CITY SELECTOR - Added New */}
+              <select 
+                className="time-input"
+                style={{ ...inputStyle, flex: '1 1 45%' }}
+                required
+                disabled={!selectedStateCode}
+                onChange={(e) => setFormData({...formData, city: e.target.value})}
+              >
+                <option value="">Select City</option>
+                {cities.length > 0 ? (
+                  cities.map((ct) => (
+                    <option key={ct.name} value={ct.name}>{ct.name}</option>
+                  ))
+                ) : (
+                  <option value={formData.state}>Use State as City</option>
+                )}
               </select>
             </div>
 
