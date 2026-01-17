@@ -145,7 +145,7 @@ const Tracker = ({ user }) => {
     localStorage.setItem(`tracker_${today}_${user.id}`, JSON.stringify(backupObj));
   };
 
-  // --- UPDATED: THIS FUNCTION NOW SAVES TO DATABASE ---
+  // --- UPDATED: THIS FUNCTION NOW SAVES TO DATABASE AND LOCALSTORAGE ---
   const updateLocation = async () => {
     if (locInput.cityName && locInput.countryCode) {
       const countryName = Country.getCountryByCode(locInput.countryCode).name;
@@ -158,10 +158,23 @@ const Tracker = ({ user }) => {
           state: locInput.cityName
         });
 
-        // 2. If successful, update the UI
+        // 2. Update Local UI State
         setLocation({ city: locInput.cityName, country: countryName });
+
+        // 3. Update LocalStorage so the app stays updated without re-login
+        const storedUser = JSON.parse(localStorage.getItem('user'));
+        if (storedUser) {
+          storedUser.state = locInput.cityName;
+          storedUser.country = countryName;
+          localStorage.setItem('user', JSON.stringify(storedUser));
+        }
+
         setIsEditingLoc(false);
-        console.log("Location updated in database ✅");
+        console.log("Location updated in database and local storage ✅");
+        
+        // 4. Refresh page to apply changes everywhere
+        window.location.reload();
+
       } catch (err) {
         console.error("Failed to sync location with database:", err);
         alert("Location updated locally, but failed to save to server. Please check your connection.");
