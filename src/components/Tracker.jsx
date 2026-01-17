@@ -13,8 +13,9 @@ const Tracker = ({ user }) => {
   const [loading, setLoading] = useState(true);
   const [notificationsEnabled, setNotificationsEnabled] = useState(Notification.permission === 'granted');
   
+  // Logic: If user has a city in DB, use it; otherwise fallback to state
   const [location, setLocation] = useState({ 
-    city: user.state || 'Lagos', 
+    city: user.city || user.state || 'Lagos', 
     country: user.country || 'Nigeria' 
   });
 
@@ -101,6 +102,7 @@ const Tracker = ({ user }) => {
       setLoading(true);
       try {
         const today = getTodayString();
+        // Using city first for best accuracy
         const apiRes = await axios.get(
           `https://api.aladhan.com/v1/timingsByCity?city=${location.city}&country=${location.country}&method=3`
         );
@@ -145,26 +147,28 @@ const Tracker = ({ user }) => {
     localStorage.setItem(`tracker_${today}_${user.id}`, JSON.stringify(backupObj));
   };
 
-  // --- UPDATED: THIS FUNCTION NOW SAVES TO DATABASE ---
+  // --- UPDATED: SENDS CITY, STATE, AND COUNTRY TO BACKEND ---
   const updateLocation = async () => {
-    if (locInput.cityName && locInput.countryCode) {
-      const countryName = Country.getCountryByCode(locInput.countryCode).name;
+    if (locInput.cityName && locInput.countryCode && locInput.stateCode) {
+      const countryObj = Country.getCountryByCode(locInput.countryCode);
+      const stateObj = State.getStateByCodeAndCountry(locInput.stateCode, locInput.countryCode);
       
       try {
-        // 1. Tell the backend to update the database
+        // 1. Tell the backend to update the database with all 3 fields
         await axios.post('https://salahtracker-backend.onrender.com/api/auth/update-location', {
           userId: user.id,
-          country: countryName,
-          state: locInput.cityName
+          country: countryObj.name,
+          state: stateObj.name,
+          city: locInput.cityName
         });
 
-        // 2. If successful, update the UI
-        setLocation({ city: locInput.cityName, country: countryName });
+        // 2. Update UI
+        setLocation({ city: locInput.cityName, country: countryObj.name });
         setIsEditingLoc(false);
-        console.log("Location updated in database ✅");
+        alert("Location updated successfully! Please logout and login to sync your journey.");
       } catch (err) {
         console.error("Failed to sync location with database:", err);
-        alert("Location updated locally, but failed to save to server. Please check your connection.");
+        alert("Update failed. Please check your connection.");
       }
     }
   };
@@ -226,7 +230,6 @@ const Tracker = ({ user }) => {
                     <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-main)' }}>📍 {location.city}</span>
                     <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Change</span>
                 </div>
-                {/* INSTRUCTION TEXT ADDED HERE */}
                 <p style={{ fontSize: '10px', color: '#666', marginTop: '8px', fontStyle: 'italic' }}>
                     Logout and login to see time changes after updating location.
                 </p>
@@ -332,7 +335,7 @@ const Tracker = ({ user }) => {
         Save Progress
       </button>
 
-      {/* FLOATING WHATSAPP BUTTON ADDED HERE */}
+      {/* FLOATING WHATSAPP BUTTON */}
       <a 
         href="https://wa.me/2347038219706" 
         target="_blank" 
