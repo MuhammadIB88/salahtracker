@@ -1,28 +1,51 @@
 import React, { useState } from 'react';
 import { signUp } from '../api'; 
 import logo from '../assets/logo.png';
-import { Country, State, City } from 'country-state-city'; // Added City import
+import { Country, State, City } from 'country-state-city';
 import { Eye, EyeOff } from 'lucide-react';
+// Assuming you have this helper to get the token
+// import { getFcmToken } from '../firebase'; 
 
-const Signup = () => {
+const Signup = ({ setUser }) => { // Added setUser prop
   const [formData, setFormData] = useState({
-    name: '', email: '', password: '', country: '', state: '', city: '' // Added city field
+    name: '', email: '', password: '', country: '', state: '', city: ''
   });
   
   const [showPassword, setShowPassword] = useState(false);
   const [selectedCountryCode, setSelectedCountryCode] = useState('');
-  const [selectedStateCode, setSelectedStateCode] = useState(''); // Added state code tracker
+  const [selectedStateCode, setSelectedStateCode] = useState('');
 
   const countries = Country.getAllCountries();
   const states = selectedCountryCode ? State.getStatesOfCountry(selectedCountryCode) : [];
-  // Get cities based on country and state
   const cities = (selectedCountryCode && selectedStateCode) ? City.getCitiesOfState(selectedCountryCode, selectedStateCode) : [];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await signUp(formData);
-      alert(response.data.msg); 
+      // 1. Try to get the FCM token before signing up
+      let fcmToken = null;
+      try {
+        // If you have a function to get the token, call it here:
+        // fcmToken = await getFcmToken(); 
+      } catch (tokenErr) {
+        console.log("FCM Token fetch failed, user can still sign up", tokenErr);
+      }
+
+      // 2. Combine form data with the token
+      const finalData = { ...formData, fcmToken };
+
+      const response = await signUp(finalData);
+      
+      // 3. Save to localStorage immediately so App.jsx sees the user
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('profile', JSON.stringify(response.data));
+      
+      // 4. Update the global user state to log them in
+      if (setUser) {
+        setUser(response.data.user);
+      }
+
+      alert("Welcome to the Journey!"); 
     } catch (err) {
       alert(err.response?.data?.msg || "Something went wrong");
     }
@@ -93,7 +116,6 @@ const Signup = () => {
             </div>
 
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-              {/* COUNTRY SELECTOR */}
               <select 
                 className="time-input"
                 style={{ ...inputStyle, flex: '1 1 100%' }}
@@ -101,7 +123,7 @@ const Signup = () => {
                 onChange={(e) => {
                   const country = countries.find(c => c.isoCode === e.target.value);
                   setSelectedCountryCode(e.target.value);
-                  setSelectedStateCode(''); // Reset state/city
+                  setSelectedStateCode('');
                   setFormData({...formData, country: country?.name || '', state: '', city: ''}); 
                 }}
               >
@@ -111,7 +133,6 @@ const Signup = () => {
                 ))}
               </select>
 
-              {/* STATE SELECTOR */}
               <select 
                 className="time-input"
                 style={{ ...inputStyle, flex: '1 1 45%' }}
@@ -129,7 +150,6 @@ const Signup = () => {
                 ))}
               </select>
 
-              {/* CITY SELECTOR - Added New */}
               <select 
                 className="time-input"
                 style={{ ...inputStyle, flex: '1 1 45%' }}
