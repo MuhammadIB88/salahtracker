@@ -107,7 +107,6 @@ const History = ({ user }) => {
               Share ↗
             </button>
         </div>
-        {/* Fixed grid for centered line */}
         <div className="summary-stats" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', paddingTop: '15px' }}>
           <div className="stat-box">
             <span className="stat-value">{stats.excellent}</span>
@@ -128,9 +127,37 @@ const History = ({ user }) => {
         ) : (
           logs.map((log) => (
             <div key={log._id || log.date} className="history-day-card" style={{ margin: '0 0 12px 0', padding: '16px 12px' }}>
-              <div className="history-date-header" style={{ borderBottom: '1px solid #f8fafc', paddingBottom: '8px', marginBottom: '12px', fontWeight: '700', color: 'var(--primary-dark)' }}>
-                {formatDate(log.date)}
+              {/* UPDATED HEADER: Flexbox for Date and Location */}
+              <div className="history-date-header" style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                borderBottom: '1px solid #f8fafc', 
+                paddingBottom: '8px', 
+                marginBottom: '12px', 
+                fontWeight: '700', 
+                color: 'var(--primary-dark)' 
+              }}>
+                <span>{formatDate(log.date)}</span>
+                
+                {/* Displaying City or State if available */}
+                {log.location && (
+                  <span style={{ 
+                    fontSize: '10px', 
+                    fontWeight: '600', 
+                    color: 'var(--text-muted)',
+                    background: '#f1f5f9',
+                    padding: '3px 10px',
+                    borderRadius: '20px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}>
+                    📍 {log.location.city || log.location.state}
+                  </span>
+                )}
               </div>
+
               <div className="history-prayers-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px' }}>
                 {["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"].map((pName) => {
                   const salah = log.prayers?.find(p => p.name === pName);
